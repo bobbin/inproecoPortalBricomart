@@ -134,10 +134,18 @@ const FormularioNuevaVenta = ({history}) => {
     }
 
     const onChangeFechaVenta = (e) => {
-        const dateFormatted = moment(e.target.value).format("DD/MM/YYYY");
-        setDatosForm({...datosForm, fechaventa: dateFormatted});
+        const inputDate = moment(e.target.value);
+        const today = moment().startOf('day');
+    
+        if (inputDate.isAfter(today)) {
+            alert("No se puede seleccionar una fecha futura.");
+            return;
+        }
+    
+        const dateFormatted = inputDate.format("DD/MM/YYYY");
+        setDatosForm({ ...datosForm, fechaventa: dateFormatted });
         setFecha(true);
-    }
+    };
 
     const onChangeMarca = (e) => {
         setDatosForm({...datosForm, marca: e.target.value})
