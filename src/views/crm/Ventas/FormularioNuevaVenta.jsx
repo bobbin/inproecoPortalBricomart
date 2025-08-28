@@ -949,8 +949,6 @@ const FormularioNuevaVenta = ({history}) => {
                                         }}
                                         />
                                     </FormGroup>
-                                </Col>
-                                <Col md={4}>
                                     <FormGroup>
                                         <Label sm={4}>Venta Online</Label>
                                         <Input
