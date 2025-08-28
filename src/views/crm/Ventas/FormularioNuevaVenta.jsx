@@ -945,10 +945,19 @@ const FormularioNuevaVenta = ({history}) => {
                                         type="checkbox"
                                         name="ventatelefonica"
                                         onChange={(e) => {
-
-                                            if(e.target.value == "on") {
-                                                setDatosForm({...datosForm, ventatelefonica: 1})
-                                            }
+                                            setDatosForm({...datosForm, ventatelefonica: e.target.checked ? 1 : 0})
+                                        }}
+                                        />
+                                    </FormGroup>
+                                </Col>
+                                <Col md={4}>
+                                    <FormGroup>
+                                        <Label sm={4}>Venta Online</Label>
+                                        <Input
+                                        type="checkbox"
+                                        name="ventaonline"
+                                        onChange={(e) => {
+                                            setDatosForm({...datosForm, ventaonline: e.target.checked ? 1 : 0})
                                         }}
                                         />
                                     </FormGroup>
