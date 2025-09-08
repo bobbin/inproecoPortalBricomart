@@ -6,6 +6,7 @@ import "@devexpress/dx-react-grid-bootstrap4/dist/dx-react-grid-bootstrap4.css";
 
 // components
 import UnitsFilterCell from "./UnitsFiltersCell";
+import VentaOnlineFilterCell from "./VentaOnlineFilterCell";
 import { GlobalStateContext } from "../../../context/GlobalContext";
 
 const FilterCell = (props) => {
@@ -17,6 +18,8 @@ const FilterCell = (props) => {
       return <UnitsFilterCell centros={centros} {...props} />;
     case "estado":
       return <UnitsFilterCell estados={estados} {...props} />;
+    case "VENTAONLINE":
+      return <VentaOnlineFilterCell {...props} />;
     default:
       return <TableFilterRow.Cell {...props} />;
   }

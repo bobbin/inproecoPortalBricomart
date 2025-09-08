@@ -128,6 +128,7 @@ export const getVentasByCentroLM = gql`
       CODIGO_VENTA
       ZONA_NOMBRE
       CENTRO_PRODUCTOR_NOMBRE
+      VENTAONLINE
     }
   }
 `;
@@ -240,6 +241,7 @@ export const getVentasAllCentros = gql`
       ZONA_NOMBRE
       CENTRO_PRODUCTOR_NOMBRE
       FECHA_VENTA_ORDEN
+      VENTAONLINE
     }
   }
 `;

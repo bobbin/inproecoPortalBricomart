@@ -74,6 +74,7 @@ const Layout = ({
   children,
   fetchVentas,
   setEstadoName,
+  formatVentaOnline,
   user,
   lastQuery,
   setLastQuery,
@@ -132,6 +133,7 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
     { columnName: "centro", predicate: columnFilterMultiPredicate },
     { columnName: "estado", predicate: columnFilterMultiPredicate },
     {columnName: "FECHA_VENTA", predicate: columnFilterDateTimePredicate},
+    { columnName: "VENTAONLINE", predicate: IntegratedFiltering.defaultPredicate },
   ]);
 
   const [filteringStateColumnExtensions] = useState([
@@ -252,7 +254,10 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
           },
         })
         .then((res) => {
-          const results = setEstadoName(res.data.getLeroyInstalacionesView);
+          let results = setEstadoName(res.data.getLeroyInstalacionesView);
+          if (formatVentaOnline) {
+            results = formatVentaOnline(results);
+          }
           if (!excelExport) {
             setRows(results);
             setLastQuery(queryString);
@@ -270,8 +275,10 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
     let filters = []
     let results = []
      filtersApplied.forEach((elemt)=>{
-      filters.push(`"${elemt.columnName}": "*${elemt.value}*"`);
-
+      // Excluir el filtro VENTAONLINE ya que es solo local
+      if(elemt.columnName !== "VENTAONLINE") {
+        filters.push(`"${elemt.columnName}": "*${elemt.value}*"`);
+      }
     })
     return filters;
 
@@ -363,7 +370,9 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
 
   useEffect(() => {
     console.log("filternum", filtersApplied);
-    if (filtersApplied.length > 0) {
+    // Solo ejecutar loadData si hay filtros que necesitan ir al servidor
+    const serverFilters = filtersApplied.filter(filter => filter.columnName !== "VENTAONLINE");
+    if (serverFilters.length > 0) {
       setFilters(filtersApplied);      
       loadData();
     } else {

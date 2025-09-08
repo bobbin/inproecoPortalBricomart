@@ -40,7 +40,9 @@ const RegistroVentas = () => {
             })
             .then(res => {
                 //console.log(res)
-                setVentas(res.data.getLeroyInstalacionesView)
+                let results = setEstadoName(res.data.getLeroyInstalacionesView);
+                results = formatVentaOnline(results);
+                setVentas(results);
             })
     }, [client, getVentasByCentroLM])
     const fetchVentasRoleCorporativo = useCallback(() => {
@@ -54,7 +56,9 @@ const RegistroVentas = () => {
                   },
             })
             .then(res => {
-                setVentas(res.data.getLeroyInstalacionesView)
+                let results = setEstadoName(res.data.getLeroyInstalacionesView);
+                results = formatVentaOnline(results);
+                setVentas(results);
             })
     }, [client, getVentasAllCentros])
 
@@ -64,6 +68,21 @@ const RegistroVentas = () => {
         if(!ventas) return results;
         for(let i = 0; i < ventas.length; i++){
             if(ventas[i].estado_venta) ventas[i].estado = ventas[i].estado_venta.nombre
+            results.push(ventas[i])
+        }
+        return results;
+    }
+
+    const formatVentaOnline = (ventas) => {
+        let results = []
+        if(!ventas) return results;
+        for(let i = 0; i < ventas.length; i++){
+            // Formatear VENTAONLINE: 1 = "Sí", 0 = "No", null/undefined = "No"
+            if(ventas[i].VENTAONLINE === 1) {
+                ventas[i].VENTAONLINE = "Sí"
+            } else {
+                ventas[i].VENTAONLINE = "No"
+            }
             results.push(ventas[i])
         }
         return results;
@@ -93,6 +112,7 @@ const RegistroVentas = () => {
             columnsToExport={REGISTRO_VENTAS_EXPORT_COLUMNS}
             fetchVentas={fetchVentas}
             setEstadoName={setEstadoName}
+            formatVentaOnline={formatVentaOnline}
             user={user}
             lastQuery={lastQuery}
             setLastQuery={setLastQuery}
