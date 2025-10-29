@@ -64,16 +64,58 @@ const FormularioNuevaVenta = ({history}) => {
      const [formError, setFormError] = useState('');
 
 
-     const onChangeNif = async (e) => {
-        let cif = e.target.value;
+    // Validadores de identificación: DNI, NIE y Pasaporte
+    const isValidDNI = (value) => {
+        const dni = (value || '').toUpperCase().trim();
+        const dniRegex = /^([0-9]{8})([A-Z])$/;
+        if (!dniRegex.test(dni)) return false;
+        const letters = "TRWAGMYFPDXBNJZSQVHLCKE";
+        const number = parseInt(dni.substring(0, 8), 10);
+        const expectedLetter = letters.charAt(number % 23);
+        return expectedLetter === dni.charAt(8);
+    };
+
+    const isValidNIE = (value) => {
+        const nie = (value || '').toUpperCase().trim();
+        const nieRegex = /^[XYZ][0-9]{7}[A-Z]$/;
+        if (!nieRegex.test(nie)) return false;
+        const letters = "TRWAGMYFPDXBNJZSQVHLCKE";
+        const map = { X: '0', Y: '1', Z: '2' };
+        const numeric = (map[nie.charAt(0)] || '') + nie.substring(1, 8);
+        const number = parseInt(numeric, 10);
+        const expectedLetter = letters.charAt(number % 23);
+        return expectedLetter === nie.charAt(8);
+    };
+
+    // Pasaporte (formato flexible: 1-3 letras seguidas de 6-7 dígitos, o 9 alfanuméricos no DNI/NIE)
+    const isValidPassport = (value) => {
+        const pass = (value || '').toUpperCase().trim();
+        if (isValidDNI(pass) || isValidNIE(pass)) return false;
+        const patterns = [
+            /^[A-Z]{3}\d{6}$/,
+            /^[A-Z]{2}\d{7}$/,
+            /^[A-Z]{1}\d{7}$/,
+            /^[A-Z0-9]{9}$/
+        ];
+        return patterns.some((re) => re.test(pass));
+    };
+
+    const isValidIdentification = (value) => {
+        if (!value) return false;
+        const v = value.toUpperCase().trim();
+        return isValidDNI(v) || isValidNIE(v) || isValidPassport(v);
+    };
+
+    const onChangeNif = async (e) => {
+        const cif = e.target.value;
         setDatosForm({ ...datosForm, nif: cif });
         await checkInstaladorCertificadoDoc(cif);
-        if (cif.length === 9 || cif === '') {
+        if (cif === '') {
             setNifInvalido(false);
             return true;
-        } else {
-            setNifInvalido(true);
         }
+        setNifInvalido(!isValidIdentification(cif));
+        return isValidIdentification(cif);
     };
 
     const validateForm = () => {
@@ -522,7 +564,7 @@ const FormularioNuevaVenta = ({history}) => {
                             <Row form>
                                 <Col md={2}>
                                     <FormGroup>
-                                        <Label>NIF/NIE <span style={{ color: 'red' }}>*</span></Label>
+                                        <Label>DNI/NIE/Pasaporte <span style={{ color: 'red' }}>*</span></Label>
                                         <Input
                                         type="text"
                                         onChange={onChangeNif}
