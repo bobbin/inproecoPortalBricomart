@@ -14,14 +14,14 @@ import { GlobalStateContext } from "../../../context/GlobalContext";
 import Layout from '../../../components/common/Layout/Layout'
 
 const RegistroVentas = () => {
-    const { user } = useContext(GlobalStateContext);  
-    const { centroId } = user; 
+    const { user } = useContext(GlobalStateContext);
+    const { centroId } = user;
     const columns = REGISTRO_VENTAS_COLUMNS;
     const [ventas, setVentas] = useState(null)
     const [lastQuery, setLastQuery] = useState();
     console.log(user)
     const fetchVentas = () => {
-        if(user.rolDesc === "LEROY_INSTALACIONES_CENTRO" || user.rolDesc === "INPROECO") fetchVentasRoleCentro()
+        if (user.rolDesc === "LEROY_INSTALACIONES_CENTRO" || user.rolDesc === "INPROECO") fetchVentasRoleCentro()
         else fetchVentasRoleCorporativo()
     }
 
@@ -46,28 +46,40 @@ const RegistroVentas = () => {
             })
     }, [client, getVentasByCentroLM])
     const fetchVentasRoleCorporativo = useCallback(() => {
+        let fields = lastQuery;
+        if (user.zonaId) {
+            let baseFields = lastQuery;
+            if (typeof lastQuery === 'string') {
+                try {
+                    baseFields = JSON.parse(lastQuery);
+                } catch (e) {
+                    baseFields = {};
+                }
+            }
+            fields = { ...baseFields, ZONA_ID: user.zonaId };
+        }
         client
             .query({
                 query: getVentasAllCentros,
                 fetchPolicy: "no-cache",
                 variables: {
                     limit: 5000,
-                    fields: lastQuery
-                  },
+                    fields: fields
+                },
             })
             .then(res => {
                 let results = setEstadoName(res.data.getLeroyInstalacionesView);
                 results = formatVentaOnline(results);
                 setVentas(results);
             })
-    }, [client, getVentasAllCentros])
+    }, [client, getVentasAllCentros, lastQuery, user.zonaId])
 
     const setEstadoName = (ventas) => {
         let results = []
         console.log(ventas)
-        if(!ventas) return results;
-        for(let i = 0; i < ventas.length; i++){
-            if(ventas[i].estado_venta) ventas[i].estado = ventas[i].estado_venta.nombre
+        if (!ventas) return results;
+        for (let i = 0; i < ventas.length; i++) {
+            if (ventas[i].estado_venta) ventas[i].estado = ventas[i].estado_venta.nombre
             results.push(ventas[i])
         }
         return results;
@@ -75,10 +87,10 @@ const RegistroVentas = () => {
 
     const formatVentaOnline = (ventas) => {
         let results = []
-        if(!ventas) return results;
-        for(let i = 0; i < ventas.length; i++){
+        if (!ventas) return results;
+        for (let i = 0; i < ventas.length; i++) {
             // Formatear VENTAONLINE: 1 = "Sí", 0 = "No", null/undefined = "No"
-            if(ventas[i].VENTAONLINE === 1) {
+            if (ventas[i].VENTAONLINE === 1) {
                 ventas[i].VENTAONLINE = "Sí"
             } else {
                 ventas[i].VENTAONLINE = "No"

@@ -103,7 +103,7 @@ const Layout = ({
     { columnName: "NUMERO_SERIE", width: "210px" },
   ]);
 
-  
+
   // FILTRO COLUMNA
   const columnFilterMultiPredicate = (value, filter, row) => {
     if (!filter.value.length) return true;
@@ -113,26 +113,26 @@ const Layout = ({
 
     return IntegratedFiltering.defaultPredicate(value, filter, row);
   };
-const columnFilterDateTimePredicate = (value, filter, row) => {
-  // transformar el valor de la celda a un objeto Date
-  const date = new Date(value);
-  // transformar date a un string con formato DD/MM/YYYY
-  const dateString = date.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const columnFilterDateTimePredicate = (value, filter, row) => {
+    // transformar el valor de la celda a un objeto Date
+    const date = new Date(value);
+    // transformar date a un string con formato DD/MM/YYYY
+    const dateString = date.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
-  // obtener el valor del filtro
-  const { value: filterValue } = filter;
-  // si el filtro no tiene valor, devolver verdadero
-  if (!filterValue) return true;
-  // si la fecha es anterior al filtro, devolver falso
-  if (dateString.includes(filterValue)) return true;
-  // en cualquier otro caso, devolver verdadero
-  return false;
+    // obtener el valor del filtro
+    const { value: filterValue } = filter;
+    // si el filtro no tiene valor, devolver verdadero
+    if (!filterValue) return true;
+    // si la fecha es anterior al filtro, devolver falso
+    if (dateString.includes(filterValue)) return true;
+    // en cualquier otro caso, devolver verdadero
+    return false;
 
-}
+  }
   const [filteringColumnExtensions, setFilteringColumnExtensions] = useState([
     { columnName: "centro", predicate: columnFilterMultiPredicate },
     { columnName: "estado", predicate: columnFilterMultiPredicate },
-    {columnName: "FECHA_VENTA", predicate: columnFilterDateTimePredicate},
+    { columnName: "FECHA_VENTA", predicate: columnFilterDateTimePredicate },
     { columnName: "VENTAONLINE", predicate: IntegratedFiltering.defaultPredicate },
   ]);
 
@@ -163,7 +163,7 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
   /* eslint-disable no-param-reassign */
   const customizeCell = (cell, row, column) => {
 
-    if(column.name == "FECHA_VENTA"){
+    if (column.name == "FECHA_VENTA") {
       cell.value = new Date(row.FECHA_VENTA);
     }
     // if (row.OrderDate < new Date(2014, 2, 3)) {
@@ -187,16 +187,16 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
   const getQueryString = () => {
     let filter;
     if (
-      user.rolDesc !== "LEROY_INSTALACIONES_CENTRO" 
+      user.rolDesc !== "LEROY_INSTALACIONES_CENTRO"
     ) {
       filter = columns
         .reduce((acc, { name }) => {
-    
-          if(searchValue === ""){
+
+          if (searchValue === "") {
             return acc;
           }
           if (name === "id") {
-        
+
             /* acc.push(`{"${name}": {"_eq": "${searchValue}"}}`); */
           } else acc.push(`"${name}": "(${searchValue})"`);
           return acc;
@@ -214,7 +214,7 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
         if (name === "id") {
           /* console.log("id"); */
           /* acc.push(`{"${name}": {"_eq": "${searchValue}"}}`); */
-        }  else acc.push(`"${name}": "(${searchValue})"`);
+        } else acc.push(`"${name}": "(${searchValue})"`);
         return acc;
       }, [])
       .join(",");
@@ -223,7 +223,7 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
       filter = `${filter}`;
     }
     return `{${filter}}`;
-    };
+  };
 
   const loadData = (excelExport = false) => {
 
@@ -234,7 +234,11 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
     // Añadir el filtro de centro en queryString
     if (user.rolDesc == "LEROY_INSTALACIONES_CENTRO") {
       // Si el objeto queryString está vacío, añadir la separación de campos si no, no añadir nada
-      queryString = queryString === "{}" ? queryString.replace("}", `"CENTRO_PRODUCTOR_ID": "${user.centroId}"}`): queryString.replace("}", `,"CENTRO_PRODUCTOR_ID": "${user.centroId}"}`);
+      queryString = queryString === "{}" ? queryString.replace("}", `"CENTRO_PRODUCTOR_ID": "${user.centroId}"}`) : queryString.replace("}", `,"CENTRO_PRODUCTOR_ID": "${user.centroId}"}`);
+    }
+    // Añadir el filtro de zona en queryString
+    if (user.zonaId) {
+      queryString = queryString === "{}" ? queryString.replace("}", `"ZONA_ID": "${user.zonaId}"}`) : queryString.replace("}", `,"ZONA_ID": "${user.zonaId}"}`);
     }
     if (
       (queryString && excelExport) ||
@@ -243,7 +247,7 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
       client
         .query({
           query:
-            user.rolDesc == "LEROY_INSTALACIONES_CENTRO" 
+            user.rolDesc == "LEROY_INSTALACIONES_CENTRO"
               ? getVentasAllCentros
               : getVentasAllCentros,
           fetchPolicy: "no-cache",
@@ -274,9 +278,9 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
   const loadDataFilter = () => {
     let filters = []
     let results = []
-     filtersApplied.forEach((elemt)=>{
+    filtersApplied.forEach((elemt) => {
       // Excluir el filtro VENTAONLINE ya que es solo local
-      if(elemt.columnName !== "VENTAONLINE") {
+      if (elemt.columnName !== "VENTAONLINE") {
         filters.push(`"${elemt.columnName}": "*${elemt.value}*"`);
       }
     })
@@ -286,7 +290,7 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
 
   // const DateFormatter = ({ value }) => value.replace(/(\d{4})-(\d{2})-(\d{2})/, '$3.$2.$1');
 
-  const DateFormatter = ({ value }) => { 
+  const DateFormatter = ({ value }) => {
     let options = { year: "numeric", month: "2-digit", day: "2-digit" };
     let date = new Date(value);
     return date.toLocaleString("es-ES", options);
@@ -303,10 +307,15 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
       user.rolDesc !== "BRICOMART_CENTRO" &&
       user.rolDesc !== "BRICOMART_INPROECO_CENTRO"
     ) {
+      const variables = {};
+      if (user.zonaId) {
+        variables.where = { CLIENTE_ID: "23", ZONA_ID: user.zonaId };
+      }
       await client
         .query({
           query: getCentros,
           fetchPolicy: "no-cache",
+          variables: variables
         })
         .then((res) => {
           for (let centro of res.data.getCentroProductor) {
@@ -355,7 +364,7 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
 
   useEffect(() => {
     if (filtersApplied.length > 0) {
-     // dataCountFilter();
+      // dataCountFilter();
     }
   }, [loadDataFilter]);
 
@@ -373,7 +382,7 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
     // Solo ejecutar loadData si hay filtros que necesitan ir al servidor
     const serverFilters = filtersApplied.filter(filter => filter.columnName !== "VENTAONLINE");
     if (serverFilters.length > 0) {
-      setFilters(filtersApplied);      
+      setFilters(filtersApplied);
       loadData();
     } else {
       fetchVentas();
@@ -381,7 +390,7 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
     }
   }, [filtersApplied]);
   useEffect(() => {
-   // loadData();
+    // loadData();
   }, [filters]);
 
   return (
@@ -426,8 +435,8 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
                           <IntegratedPaging />
                           {children}
                           <DateTypeProvider
-          for={dateColumns}
-        />
+                            for={dateColumns}
+                          />
                           <VirtualTable
                             columnExtensions={tableColumnExtensions}
                           />
@@ -453,7 +462,7 @@ const columnFilterDateTimePredicate = (value, filter, row) => {
                           />
                           <TableRowDetail
                             toggleCellComponent={(props) => (
-                              <RowVentaActions {...props} fetchVentas={fetchVentas}/>
+                              <RowVentaActions {...props} fetchVentas={fetchVentas} />
                             )}
                           />
                           {/* INICIO RECOGER LAS LÍNEAS FILTRADAS */}
