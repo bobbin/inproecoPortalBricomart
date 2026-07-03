@@ -7,7 +7,7 @@ import moment from "moment";
 import { GlobalStateContext } from "../../../context/GlobalContext";
 
 //graphql
-import { client, getLastId, getProvincias, getMunicipiosByProvincia, getCentros, insertVentaBricomart, getCentroName, getZonaByCentro, getZonaName, getDocumentPath, updateDocumentsPath } from '../../../components/graphql';
+import { client, getLastId, getProvincias, getMunicipiosByProvincia, getCentros, insertVentaBricomart, getCentroName, getZonaByCentro, getZonaName, getDocumentPath, updateDocumentsPath, getVentasAllCentros, getRetiradaDocumentosId, getDocumentosById, GET_TIPO_DOCUMENTOS } from '../../../components/graphql';
 
 // constants
 import { API_INPRONET } from '../../../components/constants';
@@ -37,6 +37,9 @@ const SubirParteB = ({history}) => {
     
     const [instalacionPropia, setInstalacionPropia] = useState(false);
     const [devuelto, setDevuelto] = useState(false);
+    const [registroDuplicado, setRegistroDuplicado] = useState(false);
+    const [toggleConfirmDuplicado, setToggleConfirmDuplicado] = useState(false);
+    const [datosPendientes, setDatosPendientes] = useState(null);
 
     // Al clicar en cerrar, se resetea el formulario
     const onClickCerrar = () => {
@@ -48,6 +51,10 @@ const SubirParteB = ({history}) => {
         setFileNamesB([]);
         setNewFilesB([]);
         setUploadFilesB([]);
+        setInstalacionPropia(false);
+        setDevuelto(false);
+        setRegistroDuplicado(false);
+        setDatosPendientes(null);
     }
 
     // Add onDropA handler
@@ -92,40 +99,79 @@ const SubirParteB = ({history}) => {
     setNewFilesB(newFilesB.filter((item) => item.name !== name.NOMBRE));
     setFileNamesB(fileNamesB.filter((item) => item !== name));
   };
-    const onSubmitForm = async (e) => {
-        e.preventDefault();
-        // Validar campos obligatorios si los checkboxes están seleccionados
-        if (instalacionPropia && !e.target.referencia_instalacion.value) {
-            alert('Por favor, complete el campo "REFERENCIA INSTALACION".');
-            return;
+    // Comprueba si el registro (por CODIGO_VENTA) tiene documentación firmada subida.
+    // Devuelve null si no existe el registro, true/false según tenga PARTE A/B FIRMADO.
+    const comprobarDocumentacionFirmada = async (identificador) => {
+        const resVenta = await client.query({
+            query: getVentasAllCentros,
+            fetchPolicy: "no-cache",
+            variables: {
+                limit: 1,
+                fields: { CODIGO_VENTA: identificador },
+            },
+        });
+        const ventas = resVenta.data.getLeroyInstalacionesView;
+        if (!ventas || ventas.length === 0) {
+            return null;
         }
 
-        if (devuelto && !e.target.codigo_devolucion.value) {
-            alert('Por favor, complete el campo "CÓDIGO DEVOLUCIÓN".');
-            return;
+        const resTipos = await client.query({
+            query: GET_TIPO_DOCUMENTOS,
+            fetchPolicy: "no-cache",
+        });
+        const tiposFirmados = resTipos.data.getLeroyInstalacionesTipoDocumento
+            .filter((tipo) => tipo.NOMBRE === "PARTE A FIRMADO" || tipo.NOMBRE === "PARTE B FIRMADO")
+            .map((tipo) => tipo.ID.toString());
+
+        const resDocumentosIds = await client.query({
+            query: getRetiradaDocumentosId,
+            fetchPolicy: "no-cache",
+            variables: {
+                retiradaId: ventas[0].ID.toString(),
+            },
+        });
+        const documentosIds = resDocumentosIds.data.getLeroyInstalacionesLeroyInstalacionesDocumento;
+
+        for (let i = 0; i < documentosIds.length; i++) {
+            const resDocumento = await client.query({
+                query: getDocumentosById,
+                fetchPolicy: "no-cache",
+                variables: {
+                    id: documentosIds[i].LEROY_INSTALACIONES_DOCUMENTO_ID.toString(),
+                },
+            });
+            const documento = resDocumento.data.getLeroyInstalacionesDocumento[0];
+            if (documento && tiposFirmados.includes(documento.TIPO_DOCUMENTO_ID.toString())) {
+                return true;
+            }
         }
-        // Enviar datos a la API usando FormData con todos los inputs del formulario
+        return false;
+    }
+
+    // Enviar datos a la API usando FormData con todos los inputs del formulario
+    const enviarFormulario = (datos) => {
         const formData = new FormData();
         formData.append("accion", "cargarpartebinstalaciones");
-        formData.append("identificador", e.target.identificador.value);
-        formData.append("instalacionpropia", e.target.instalacion_propia.checked);
-        formData.append("devuelto", e.target.devuelto.checked);
-        formData.append("ref_instalacion", e.target.referencia_instalacion ? e.target.referencia_instalacion.value:'');
-        formData.append("codigo_devolucion", e.target.codigo_devolucion ? e.target.codigo_devolucion.value: '');
+        formData.append("identificador", datos.identificador);
+        formData.append("instalacionpropia", datos.instalacionpropia);
+        formData.append("devuelto", datos.devuelto);
+        formData.append("registro_duplicado", datos.registro_duplicado);
+        formData.append("ref_instalacion", datos.ref_instalacion);
+        formData.append("codigo_devolucion", datos.codigo_devolucion);
         formData.append("user", user.nickname);
-        
+
         // Add Parte A files
         newFiles.forEach(file => {
             formData.append('documentoA', file);
         });
-        
+
         // Add Parte B files
         newFilesB.forEach(file => {
             formData.append('documento', file);
         });
-        
+
         formData.append("direct", "true");
-        
+
         const requestOptions = {
             method: 'POST',
             body: formData
@@ -140,7 +186,58 @@ const SubirParteB = ({history}) => {
               if(err){
                 setToggleVentaErrorDocument(true)
               }
-        }) 
+        })
+    }
+
+    const onSubmitForm = async (e) => {
+        e.preventDefault();
+        // Validar campos obligatorios si los checkboxes están seleccionados
+        if (instalacionPropia && !e.target.referencia_instalacion.value) {
+            alert('Por favor, complete el campo "REFERENCIA INSTALACION".');
+            return;
+        }
+
+        if (devuelto && !e.target.codigo_devolucion.value) {
+            alert('Por favor, complete el campo "CÓDIGO DEVOLUCIÓN".');
+            return;
+        }
+
+        if (registroDuplicado && !e.target.identificador.value) {
+            alert('Por favor, indique el ID del documento.');
+            return;
+        }
+
+        // Capturar los valores del formulario antes de las comprobaciones asíncronas
+        const datos = {
+            identificador: e.target.identificador.value,
+            instalacionpropia: e.target.instalacion_propia.checked,
+            devuelto: e.target.devuelto.checked,
+            registro_duplicado: e.target.registro_duplicado.checked,
+            ref_instalacion: e.target.referencia_instalacion ? e.target.referencia_instalacion.value:'',
+            codigo_devolucion: e.target.codigo_devolucion ? e.target.codigo_devolucion.value: '',
+        };
+
+        if (registroDuplicado) {
+            let tieneFirmados;
+            try {
+                tieneFirmados = await comprobarDocumentacionFirmada(datos.identificador);
+            } catch (err) {
+                console.log(err);
+                alert('No se ha podido comprobar la documentación del registro. Inténtelo de nuevo.');
+                return;
+            }
+            if (tieneFirmados === null) {
+                alert('No se ha encontrado ningún registro con ese ID.');
+                return;
+            }
+            if (tieneFirmados) {
+                setDatosPendientes(datos);
+                setToggleConfirmDuplicado(true);
+                return;
+            }
+        }
+
+        enviarFormulario(datos);
     }
 
     return (
@@ -324,6 +421,21 @@ const SubirParteB = ({history}) => {
                                     </Col>
                                 </Row>
                             )}
+<Row form>
+<Col md={5}>
+  <FormGroup>
+    <Label md={5}>REGISTRO DUPLICADO</Label>
+    <Input
+      id="registro_duplicado"
+      type="checkbox"
+      onChange={(e) => setRegistroDuplicado(e.target.checked)}
+      style={{ backgroundColor: '#fff',
+      border: '2px solid #ccc',
+      borderRadius: '3px' }}
+    />
+  </FormGroup>
+</Col>
+            </Row>
                             <Row form>
                                 <Col md={2}>
                                     <Button type="submit" color="primary" className="btn btn-primary btn-lg btn-block">Guardar</Button>
@@ -334,6 +446,29 @@ const SubirParteB = ({history}) => {
                 </section>
             </div>
             {/* MODALES */}
+            {toggleConfirmDuplicado ? (
+                <Modal isOpen={toggleConfirmDuplicado} toggle={()=>{setToggleConfirmDuplicado(!toggleConfirmDuplicado)}}>
+                <ModalHeader >Registro duplicado</ModalHeader>
+                <ModalBody>El archivo que desea anular por duplicidad contiene documentación firmada, ¿está seguro que desea anularlo?
+                </ModalBody>
+                <ModalFooter>
+        <Button color="primary" onClick={() => {
+            setToggleConfirmDuplicado(false);
+            enviarFormulario(datosPendientes);
+            setDatosPendientes(null);
+        }}>
+          Aceptar
+        </Button>
+        <Button color="secondary" onClick={() => {
+            setToggleConfirmDuplicado(false);
+            setDatosPendientes(null);
+        }}>
+          Cancelar
+        </Button>
+      </ModalFooter>
+              </Modal>
+                ) : (<></>)
+            }
             {toggleVentaSuccess ? (
                 <Modal isOpen={toggleVentaSuccess} toggle={()=>{setToggleVentaSuccess(!toggleVentaSuccess)}}>
                 <ModalHeader >Subir Documento</ModalHeader>
