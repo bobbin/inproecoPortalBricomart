@@ -36,7 +36,7 @@ Detalle técnico: los valores del formulario se capturan en un objeto antes del 
 
 ## Anexo — cambios de backend (a implementar por Jorge en el servidor)
 
-> Las copias locales de `LeroyInstalacionesController.php` en `d:\DEV\inproeco\inpronetphp` son de feb-2024 y NO reflejan producción; este snippet es orientativo sobre el patrón existente.
+> **Actualización 2026-07-03:** Jorge copió el controller de producción a `php/LeroyInstalacionesController.php` y el cambio ya está implementado ahí (acción `cargarpartebinstalaciones` + `marcarRegistroDuplicado()` + `enviarDuplicado()`), junto con la plantilla `php/duplicadoleroyinstalaciones.html`. Queda: subir ambos ficheros al servidor e insertar el estado `REGISTRO DUPLICADO` en BD. Los snippets de abajo eran la propuesta orientativa original.
 
 **1. BD:** insertar el estado nuevo en la tabla de estados de Leroy Instalaciones con nombre `REGISTRO DUPLICADO`.
 
