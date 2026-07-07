@@ -63,7 +63,7 @@ function enviarDuplicado($email, $codigo) {
 }
 ```
 
-**3. Plantilla de email** `documentos/emailsnotificacion/duplicadoleroyinstalaciones.html` — TEXTO PROVISIONAL, sustituir por el texto definitivo del Word:
+**3. Plantilla de email** `documentos/emailsnotificacion/duplicadoleroyinstalaciones.html` — el texto DEFINITIVO del Word está en `php/duplicadoleroyinstalaciones.html` (asunto: "Anulación de registro <código> por error - LEROY MERLIN"). El bloque de abajo era el texto provisional original:
 
 ```html
 <html>
@@ -84,4 +84,4 @@ function enviarDuplicado($email, $codigo) {
 </html>
 ```
 
-**Asunto provisional:** "Anulación de registro duplicado - Equipo gases fluorados - LEROY MERLÍN".
+**Asunto definitivo (del Word):** "Anulación de registro [ID_REGISTRO] por error - LEROY MERLIN" — implementado interpolando el código de venta en `enviarDuplicado()`.

@@ -296,7 +296,7 @@ class LeroyInstalacionesController {
 		$valores = array($codigo);
 
 		$destinatarios=array($email);
-		$asunto = 'Anulación de registro duplicado - Equipo gases fluorados - LEROY MERLÍN';
+		$asunto = 'Anulación de registro '.$codigo.' por error - LEROY MERLIN';
 		EmailController::enviarMailAttachment($rutaPlantilla, $claves, $valores, array_unique($destinatarios), $asunto, -1, array());
 
 	}
