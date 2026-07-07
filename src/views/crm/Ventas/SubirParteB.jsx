@@ -202,7 +202,7 @@ const SubirParteB = ({history}) => {
             return;
         }
 
-        if (registroDuplicado && !e.target.identificador.value) {
+        if (e.target.registro_duplicado.checked && !e.target.identificador.value) {
             alert('Por favor, indique el ID del documento.');
             return;
         }
@@ -217,7 +217,9 @@ const SubirParteB = ({history}) => {
             codigo_devolucion: e.target.codigo_devolucion ? e.target.codigo_devolucion.value: '',
         };
 
-        if (registroDuplicado) {
+        // La comprobación se decide por el valor del formulario (datos), el mismo que se
+        // envía al PHP: así nunca puede enviarse registro_duplicado=true sin comprobar.
+        if (datos.registro_duplicado) {
             let tieneFirmados;
             try {
                 tieneFirmados = await comprobarDocumentacionFirmada(datos.identificador);
@@ -428,6 +430,7 @@ const SubirParteB = ({history}) => {
     <Input
       id="registro_duplicado"
       type="checkbox"
+      checked={registroDuplicado}
       onChange={(e) => setRegistroDuplicado(e.target.checked)}
       style={{ backgroundColor: '#fff',
       border: '2px solid #ccc',
