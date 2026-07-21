@@ -30,6 +30,7 @@
     "html-to-draftjs": "1.4.0",
     "isomorphic-fetch": "^3.0.0",
     "jquery": "^3.5.1",
+    "js-cookie": "^2.2.1",
     "jvectormap": "2.0.4",
     "moment": "^2.29.1",
     "moment-range": "^3.0.3",

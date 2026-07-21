@@ -1,6 +1,7 @@
-import React, {useState, useContext} from "react";
+import React, {useState, useContext, useEffect} from "react";
 import { Link, Redirect } from 'react-router-dom';
 import { Auth } from 'aws-amplify';
+import Cookies from 'js-cookie';
 import {
     Button, Modal, ModalHeader, ModalBody, ModalFooter,
     Container, Row, Col, Label, FormGroup, Input, Form, FormText
@@ -73,8 +74,43 @@ const Login = (props) => {
               if(err){
                 setUserInvalid(true)
               }
-        }) 
+        })
     }
+
+    // La cookie "login" la deja el SSO en el dominio .inpronet.es. Si trae un rol
+    // válido se entra directo, sin pasar por el formulario de usuario/contraseña.
+    useEffect(() => {
+      const loginCookie = Cookies.get('login')
+      if (!loginCookie) return
+
+      let userLogged = null
+      try {
+        userLogged = JSON.parse(loginCookie)
+      } catch (e) {
+        try {
+          userLogged = JSON.parse(decodeURIComponent(loginCookie))
+        } catch (e2) {
+          console.log("Cookie de login no válida", e2)
+          return
+        }
+      }
+
+      if (!userLogged) return
+      if (userLogged.rolDesc !== "LEROY_INSTALACIONES_CENTRO" &&
+          userLogged.rolDesc !== "LEROY_INSTALACIONES_CORPORATIVO" &&
+          userLogged.rolDesc !== "LEROY_INSTALACIONES_ZONA" &&
+          userLogged.rolDesc !== "INPROECO") return
+
+      dispatch(
+        { type: "SET_ALLOWED", payload: { isAllowed: true } });
+      dispatch({
+        type: "SET_LOGIN",
+        payload: { token: userLogged.mail, user: userLogged },
+      });
+
+      if(userLogged.rolDesc == "INPROECO" || userLogged.rolDesc === "LEROY_INSTALACIONES_CENTRO") props.history.push("/crm/nueva-venta");
+      else props.history.push("/crm/registro-ventas");
+    }, [])
 
     return (
       <div className="home">
