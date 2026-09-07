@@ -80,18 +80,19 @@ const Login = ({ history }) => {
     if(Cookies.get('login')){   
       const userLogged = JSON.parse(decodeURIComponent(Cookies.get('login')));     
       if (
-        userLogged.rolDesc == "CLIENTE_CENTRO" ||
+        userLogged.rolDesc == "LEROY_INSTALACIONES_CENTRO" ||
         userLogged.rolDesc == "CLIENTE_CORPORATIVO" ||
         userLogged.rolDesc == "CLIENTE_ZONA" ||
-        userLogged.rolDesc == "ES-LM-ROLE-INPRONET-FLUORADOS"
+        userLogged.rolDesc == "ES-LM-ROLE-INPRONET-FLUORADOS" 
       ){
+        
         dispatch({
           type: "SET_LOGIN",
           payload: { token: userLogged.mail, user: userLogged },
         });
         setUserLoggedIn(true);
         dispatch({ type: "SET_ALLOWED", payload: { isAllowed: true } });
-        history.push("/crm/servicios");
+        history.push("/crm/nueva-venta");
       }
     }
   }, [])
