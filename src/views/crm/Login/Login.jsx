@@ -7,7 +7,6 @@ import { GlobalDispatchContext } from "../../../context/GlobalContext";
 
 import { API_INPRONET } from "../../../components/constants";
 
-import RecordarPasswordModal from "../../../components/common/Modales/RecordarPasswordModal";
 
 const Login = ({ history }) => {
   // context
