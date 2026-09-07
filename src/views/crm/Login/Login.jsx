@@ -102,7 +102,7 @@ return (
     <>
     {{userLoggedIn} ? (
     <div class="home">
-      <img class="img" src="/nuevaIlustracion.png" />
+      <img class="img" src="/ilustracion-login.png" />
 
       <div class="login">
 
