@@ -311,9 +311,17 @@ const FormularioNuevaVenta = ({history}) => {
     }
 
     const fetchCentros = () => {
+        // Los usuarios de centro solo ven su tienda; los de zona, las tiendas de su zona
+        const variables = {};
+        if (user.rolDesc === "LEROY_INSTALACIONES_CENTRO" && centroId) {
+            variables.where = { CLIENTE_ID: "23", ID: centroId.toString() };
+        } else if (user.rolDesc === "LEROY_INSTALACIONES_ZONA" && user.zonaId) {
+            variables.where = { CLIENTE_ID: "23", ZONA_ID: user.zonaId };
+        }
         client
             .query({
-                query: getCentros
+                query: getCentros,
+                variables
             })
             .then(res => {
                 setCentros(res.data.getCentroProductor)
@@ -963,7 +971,8 @@ const FormularioNuevaVenta = ({history}) => {
                                         <Input
                                         type="select"
                                         onChange={onChangeCentro}
-                                        >   
+                                        disabled={user.rolDesc === "LEROY_INSTALACIONES_CENTRO" && !!centroId}
+                                        >
                                             {!centroId && (<option disabled selected value> -- Seleccionar -- </option>)}
                                             {centros && centros.map(centro=>{ 
                                                 if(centro.ID == centroId) {
