@@ -82,6 +82,7 @@ const Login = ({ history }) => {
       if (
         userLogged.rolDesc == "LEROY_INSTALACIONES_CENTRO" ||
         userLogged.rolDesc == "CLIENTE_CORPORATIVO" ||
+        userLogged.rolDesc == "LEROY_INSTALACIONES_CORPORATIVO" ||
         userLogged.rolDesc == "CLIENTE_ZONA" ||
         userLogged.rolDesc == "LEROY_INSTALACIONES_ZONA" ||
         userLogged.rolDesc == "ES-LM-ROLE-INPRONET-FLUORADOS" 
