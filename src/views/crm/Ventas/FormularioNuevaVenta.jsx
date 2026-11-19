@@ -10,7 +10,7 @@ import { GlobalStateContext } from "../../../context/GlobalContext";
 import { client,getMarcas, getMarcayModeloByReferencia, getLastId, getProvincias, getMunicipiosByProvincia, getCentros, insertVentaBricomart, getCentroName, getZonaByCentro, getZonaName, getDocumentPath, updateDocumentsPath } from '../../../components/graphql';
 
 // constants
-import { API_INPRONET } from '../../../components/constants';
+import { API_INPRONET, getUserCentroIds, toInFilter } from '../../../components/constants';
 
 // components
 import VentaSuccessModal from '../../../components/common/Modals/VentaSuccessModal';
@@ -311,9 +311,13 @@ const FormularioNuevaVenta = ({history}) => {
     }
 
     const fetchCentros = () => {
-        // Los usuarios de centro solo ven su tienda; los de zona, las tiendas de su zona
+        // Usuarios con varios centros asignados: solo esos centros.
+        // Los de centro solo ven su tienda; los de zona, las tiendas de su zona.
         const variables = {};
-        if (user.rolDesc === "LEROY_INSTALACIONES_CENTRO" && centroId) {
+        const centroIds = getUserCentroIds(user);
+        if (centroIds.length > 0) {
+            variables.where = { CLIENTE_ID: "23", ID: toInFilter(centroIds) };
+        } else if (user.rolDesc === "LEROY_INSTALACIONES_CENTRO" && centroId) {
             variables.where = { CLIENTE_ID: "23", ID: centroId.toString() };
         } else if (user.rolDesc === "LEROY_INSTALACIONES_ZONA" && user.zonaId) {
             variables.where = { CLIENTE_ID: "23", ZONA_ID: user.zonaId };

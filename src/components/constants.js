@@ -241,3 +241,16 @@ export const GET_RESULTS_SERVICIOS = (res) => {
   }
   return results;
 };
+
+// Centros asignados al usuario (cookie "centroIds"): admite array o texto "12,34".
+// Solo se aceptan IDs numéricos.
+export const getUserCentroIds = (user) => {
+  if (!user || !user.centroIds) return [];
+  const ids = Array.isArray(user.centroIds)
+    ? user.centroIds
+    : String(user.centroIds).split(",");
+  return ids.map((id) => String(id).trim()).filter((id) => /^\d+$/.test(id));
+};
+
+// Valor para filtrar por varios IDs en GraphQL Mesh: "(12,34)" se traduce a IN (12,34)
+export const toInFilter = (ids) => `(${ids.join(",")})`;

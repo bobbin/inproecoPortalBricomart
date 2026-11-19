@@ -45,7 +45,7 @@ import RowVentaActions from "../Icons/RowVentaActions";
 import ClearFilters from "../Filters/ClearFilters";
 
 // CONSTANTS
-import { compareDates, compareTimestamps } from "./../../constants";
+import { compareDates, compareTimestamps, getUserCentroIds, toInFilter } from "./../../constants";
 
 // CONTEXT
 import {
@@ -232,7 +232,12 @@ const Layout = ({
     //const queryString = loadDataFilter();
     let limit = excelExport ? 10000 : 500;
     // Añadir el filtro de centro en queryString
-    if (user.rolDesc == "LEROY_INSTALACIONES_CENTRO") {
+    const centroIds = getUserCentroIds(user);
+    if (centroIds.length > 0) {
+      // Usuarios con varios centros asignados: solo ventas de esos centros
+      const centrosFilter = toInFilter(centroIds);
+      queryString = queryString === "{}" ? queryString.replace("}", `"CENTRO_PRODUCTOR_ID": "${centrosFilter}"}`) : queryString.replace("}", `,"CENTRO_PRODUCTOR_ID": "${centrosFilter}"}`);
+    } else if (user.rolDesc == "LEROY_INSTALACIONES_CENTRO") {
       // Si el objeto queryString está vacío, añadir la separación de campos si no, no añadir nada
       queryString = queryString === "{}" ? queryString.replace("}", `"CENTRO_PRODUCTOR_ID": "${user.centroId}"}`) : queryString.replace("}", `,"CENTRO_PRODUCTOR_ID": "${user.centroId}"}`);
     }
@@ -308,8 +313,11 @@ const Layout = ({
       user.rolDesc !== "BRICOMART_INPROECO_CENTRO"
     ) {
       const variables = {};
-      if (user.zonaId) {
-        variables.where = { CLIENTE_ID: "23", ZONA_ID: user.zonaId };
+      const centroIds = getUserCentroIds(user);
+      if (user.zonaId || centroIds.length > 0) {
+        variables.where = { CLIENTE_ID: "23" };
+        if (user.zonaId) variables.where.ZONA_ID = user.zonaId;
+        if (centroIds.length > 0) variables.where.ID = toInFilter(centroIds);
       }
       await client
         .query({

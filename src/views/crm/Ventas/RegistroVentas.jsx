@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { FilteringState, IntegratedFiltering } from "@devexpress/dx-react-grid";
 
 //constants
-import { REGISTRO_VENTAS_COLUMNS, REGISTRO_VENTAS_EXPORT_COLUMNS } from '../../../components/constants';
+import { REGISTRO_VENTAS_COLUMNS, REGISTRO_VENTAS_EXPORT_COLUMNS, getUserCentroIds, toInFilter } from '../../../components/constants';
 
 //graphql
 import { client, getVentasByCentro, getVentasAllCentros, getVentasByCentroLM } from '../../../components/graphql';
@@ -47,7 +47,8 @@ const RegistroVentas = () => {
     }, [client, getVentasByCentroLM])
     const fetchVentasRoleCorporativo = useCallback(() => {
         let fields = lastQuery;
-        if (user.zonaId) {
+        const centroIds = getUserCentroIds(user);
+        if (user.zonaId || centroIds.length > 0) {
             let baseFields = lastQuery;
             if (typeof lastQuery === 'string') {
                 try {
@@ -56,7 +57,10 @@ const RegistroVentas = () => {
                     baseFields = {};
                 }
             }
-            fields = { ...baseFields, ZONA_ID: user.zonaId };
+            fields = { ...baseFields };
+            if (user.zonaId) fields.ZONA_ID = user.zonaId;
+            // Usuarios con varios centros asignados: solo ventas de esos centros
+            if (centroIds.length > 0) fields.CENTRO_PRODUCTOR_ID = toInFilter(centroIds);
         }
         client
             .query({
@@ -72,7 +76,7 @@ const RegistroVentas = () => {
                 results = formatVentaOnline(results);
                 setVentas(results);
             })
-    }, [client, getVentasAllCentros, lastQuery, user.zonaId])
+    }, [client, getVentasAllCentros, lastQuery, user])
 
     const setEstadoName = (ventas) => {
         let results = []
