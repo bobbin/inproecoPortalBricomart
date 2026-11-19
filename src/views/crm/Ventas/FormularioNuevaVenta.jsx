@@ -10,7 +10,7 @@ import { GlobalStateContext } from "../../../context/GlobalContext";
 import { client,getMarcas, getMarcayModeloByReferencia, getLastId, getProvincias, getMunicipiosByProvincia, getCentros, insertVentaBricomart, getCentroName, getZonaByCentro, getZonaName, getDocumentPath, updateDocumentsPath } from '../../../components/graphql';
 
 // constants
-import { API_INPRONET, getUserCentroIds, toInFilter } from '../../../components/constants';
+import { API_INPRONET, getUserCentroIds } from '../../../components/constants';
 
 // components
 import VentaSuccessModal from '../../../components/common/Modals/VentaSuccessModal';
@@ -316,7 +316,9 @@ const FormularioNuevaVenta = ({history}) => {
         const variables = {};
         const centroIds = getUserCentroIds(user);
         if (centroIds.length > 0) {
-            variables.where = { CLIENTE_ID: "23", ID: toInFilter(centroIds) };
+            // En la tabla de centros el filtro "(12,34)" no se traduce a IN:
+            // se traen las tiendas de Leroy y se filtran aquí por ID
+            variables.where = { CLIENTE_ID: "23" };
         } else if (user.rolDesc === "LEROY_INSTALACIONES_CENTRO" && centroId) {
             variables.where = { CLIENTE_ID: "23", ID: centroId.toString() };
         } else if (user.rolDesc === "LEROY_INSTALACIONES_ZONA" && user.zonaId) {
@@ -328,7 +330,11 @@ const FormularioNuevaVenta = ({history}) => {
                 variables
             })
             .then(res => {
-                setCentros(res.data.getCentroProductor)
+                let lista = res.data.getCentroProductor || [];
+                if (centroIds.length > 0) {
+                    lista = lista.filter(centro => centroIds.includes(String(centro.ID)));
+                }
+                setCentros(lista)
             })
     }
 

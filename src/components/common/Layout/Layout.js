@@ -317,7 +317,6 @@ const Layout = ({
       if (user.zonaId || centroIds.length > 0) {
         variables.where = { CLIENTE_ID: "23" };
         if (user.zonaId) variables.where.ZONA_ID = user.zonaId;
-        if (centroIds.length > 0) variables.where.ID = toInFilter(centroIds);
       }
       await client
         .query({
@@ -327,6 +326,8 @@ const Layout = ({
         })
         .then((res) => {
           for (let centro of res.data.getCentroProductor) {
+            // En la tabla de centros el filtro "(12,34)" no se traduce a IN: se filtra aquí por ID
+            if (centroIds.length > 0 && !centroIds.includes(String(centro.ID))) continue;
             results.push(centro.DENOMINACION);
           }
         });
